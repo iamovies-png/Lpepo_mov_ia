@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fantasy Magique — Atelier Vidéo</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; min-height: 100%; overflow-x: hidden; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    background: #05030f;
+    color: #f0e8ff;
+    min-height: 100vh; padding: 1.5rem 1rem 6rem; font-size: 15px; line-height: 1.5;
+    max-width: 900px; margin: 0 auto;
+    position: relative;
+    isolation: isolate;
+}
+
+#bg3d {
+    position: fixed; inset: 0; z-index: -3; overflow: hidden;
+    perspective: 800px; perspective-origin: 50% 40%;
+    background: radial-gradient(ellipse at 50% 20%, #1a0f2e 0%, #0a0618 45%, #05030f 100%);
+}
+#bg3d .grid {
+    position: absolute; left: -50%; top: -10%; width: 200%; height: 200%;
+       background-image:
+        linear-gradient(rgba(74,158,255,0.4) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(94,184,255,0.3) 2px, transparent 2px);
+    background-size: 90px 90px, 90px 90px;
+    transform: rotateX(62deg) translateZ(-120px);
+    transform-origin: 50% 50%;
+    animation: gridMove 22s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(74,158,255,0.4));
+    mask-image: radial-gradient(ellipse at 50% 50%, #000 30%, transparent 78%);
+    -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 30%, transparent 78%);
+}
+#bg3d .grid::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+        radial-gradient(circle at 30% 30%, rgba(255,217,102,0.12), transparent 40%),
+        radial-gradient(circle at 70% 70%, rgba(74,158,255,0.15), transparent 40%);
+    animation: gridGlow 16s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+@keyframes gridMove {
+    0%   { transform: rotateX(62deg) translateZ(-120px) translateY(0); }
+    100% { transform: rotateX(62deg) translateZ(-120px) translateY(90px); }
+}
+@keyframes gridGlow { 0% { opacity: 0.5; } 100% { opacity: 0.9; } }
+
+#bg3d .halo { position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none; mix-blend-mode: screen; }
+#bg3d .halo.h1 { background: radial-gradient(circle, rgba(74,158,255,0.5), transparent 70%); }    
+    animation: haloFloat1 18s ease-in-out infinite; }
+#bg3d .halo.h2 { background: radial-gradient(circle, rgba(94,184,255,0.4), transparent 70%); }
+    animation: haloFloat2 22s ease-in-out infinite; }
+#bg3d .halo.h3 { background: radial-gradient(circle, rgba(200,220,255,0.3), transparent 70%); }
+    animation: haloFloat3 26s ease-in-out infinite; }
+@keyframes haloFloat1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(80px, 60px) scale(1.15); } }
+@keyframes haloFloat2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-70px, -50px) scale(1.2); } }
+@keyframes haloFloat3 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-50px, 40px) scale(1.1); } }
+
+#circuitCanvas { position: fixed; inset: 0; z-index: -2; pointer-events: none; mix-blend-mode: screen; opacity: 0.7; }
+#smokeCanvas { position: fixed; inset: 0; z-index: -1; pointer-events: none; mix-blend-mode: screen; opacity: 0.55; }
+
+header { margin-bottom: 1.5rem; text-align: center; position: relative; z-index: 1; }
+h1 {
+    font-size: 1.5rem; font-weight: 700; margin-bottom: 0.3rem;
+    background: linear-gradient(90deg, #4a9eff, #a8d8ff, #00e5ff, #4a9eff);
+    background-size: 200% 200%;
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    animation: titleShine 6s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(74,158,255,0.6)) drop-shadow(0 0 40px rgba(0,229,255,0.3));
+    letter-spacing: 0.02em;
+    text-align: center;
+    line-height: 1.3;
+}
+@keyframes titleShine { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+.subtitle { font-size: 0.85rem; color: #8fa8c8; font-style: italic; }
+
+.info-banner, .panel, .section, .upload-zone, .queue-item, .gallery-item {
+    position: relative; z-index: 1;
+    transform-style: preserve-3d;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.info-banner {
+    background: linear-gradient(135deg, rgba(74,158,255,0.18), rgba(94,184,255,0.12));
+    border: 1px solid rgba(74,158,255,0.35);
+    border-left: 3px solid #4a9eff;
+    padding: 0.85rem 1rem; border-radius: 12px;
+    font-size: 0.8rem; margin-bottom: 1rem; line-height: 1.5;
+    box-shadow: 0 4px 20px rgba(74,158,255,0.15), inset 0 1px 0 rgba(255,255,255,0.06);
+    backdrop-filter: blur(10px);
+}
+.info-banner strong { color: #ffd966; }
+
+.panel {
+    background: linear-gradient(145deg, rgba(30,20,55,0.85), rgba(20,12,40,0.9));
+    border: 1px solid rgba(74,158,255,0.25);
+    border-radius: 14px; padding: 1rem 1.2rem; margin-bottom: 1rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px);
+}
+.panel.ok { border-color: rgba(74,222,128,0.6); }
+
+.api-key-input {
+    width: 100%; padding: 0.85rem 1rem; border-radius: 10px;
+    border: 1px solid rgba(74,158,255,0.25); background: rgba(10,6,25,0.7);
+    color: #f0e8ff; font-family: monospace; font-size: 0.9rem; margin-bottom: 0.6rem;
+}
+.api-key-input:focus { outline: none; border-color: #4a9eff; }
+
+.api-save-btn {
+    width: 100%; padding: 0.9rem; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #4a9eff, #5eb8ff);
+    color: #fff; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; margin-bottom: 0.6rem;
+}
+.api-save-btn:active { transform: translateY(1px); }
+
+.status-line {
+    font-size: 0.78rem; padding: 0.6rem 0.85rem; border-radius: 8px; margin-bottom: 0.5rem;
+    background: rgba(10,6,25,0.6); color: #8fa8c8;
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.status-line.ok { background: rgba(74,222,128,0.15); color: #4ade80; font-weight: 600; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: #6a5a8a; flex-shrink: 0; }
+.status-line.ok .status-dot { background: #4ade80; }
+
+.hint { font-size: 0.72rem; color: #8fa8c8; margin-top: 0.4rem; }
+.hint a { color: #4a9eff; }
+
+.upload-zone {
+    border: 2px dashed rgba(74,158,255,0.35); border-radius: 14px;
+    padding: 2rem 1rem; text-align: center; cursor: pointer;
+    margin-bottom: 1rem;
+    background: linear-gradient(145deg, rgba(30,20,55,0.7), rgba(20,12,40,0.85));
+    transition: all 0.25s;
+}
+.upload-zone:hover, .upload-zone:active {
+    border-color: #4a9eff; transform: translateY(-2px);
+}
+.upload-zone input { display: none; }
+.upload-icon { font-size: 2.4rem; margin-bottom: 0.6rem; color: #4a9eff; }
+.upload-text { font-size: 1rem; margin-bottom: 0.3rem; }
+.upload-hint { font-size: 0.75rem; color: #8fa8c8; }
+
+.images-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 0.5rem; margin-bottom: 1rem; position: relative; z-index: 1;
+}
+.image-card {
+    position: relative; border-radius: 10px; overflow: hidden;
+    border: 1px solid rgba(74,158,255,0.25); background: #251a40; aspect-ratio: 9/16;
+}
+.image-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.image-card .remove-btn {
+    position: absolute; top: 4px; right: 4px;
+    background: rgba(0,0,0,0.75); color: #fff; border: none;
+    width: 22px; height: 22px; border-radius: 50%; font-size: 11px;
+    cursor: pointer; line-height: 1;
+}
+
+.section {
+    background: linear-gradient(145deg, rgba(30,20,55,0.85), rgba(20,12,40,0.9));
+    border: 1px solid rgba(74,158,255,0.25);
+    border-radius: 14px; margin-bottom: 1rem; overflow: hidden;
+}
+.section-header {
+    padding: 0.9rem 1.1rem; cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.section-header:hover { background: rgba(74,158,255,0.06); }
+.section-title {
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em;
+    color: #8fa8c8; font-weight: 600;
+}
+.chevron { font-size: 0.7rem; color: #6a5a8a; transition: transform 0.2s; }
+.section.open .chevron { transform: rotate(180deg); }
+.section-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+.section.open .section-body { max-height: 3000px; }
+.section-content { padding: 0 1.1rem 1.1rem; }
+
+.prompt-main {
+    width: 100%; padding: 0.85rem 1rem; border-radius: 10px;
+    border: 1px solid rgba(74,158,255,0.25); background: rgba(10,6,25,0.7);
+    color: #f0e8ff; font-family: inherit; font-size: 0.9rem;
+    min-height: 110px; resize: vertical; line-height: 1.5;
+}
+.prompt-main:focus { outline: none; border-color: #4a9eff; }
+
+.prompt-presets { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.7rem; }
+.prompt-preset {
+    padding: 0.4rem 0.8rem; border-radius: 16px;
+    border: 1px solid rgba(74,158,255,0.25); background: rgba(37,26,64,0.7);
+    font-size: 0.72rem; cursor: pointer; color: #8fa8c8;
+}
+.prompt-preset:hover { border-color: #4a9eff; color: #f0e8ff; }
+
+.styles-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.5rem;
+}
+.style-card {
+    padding: 0.75rem; border-radius: 10px;
+    border: 1px solid rgba(74,158,255,0.25); background: rgba(37,26,64,0.7);
+    cursor: pointer; display: flex; align-items: center; gap: 0.5rem;
+}
+.style-card.selected {
+    background: linear-gradient(135deg, #4a9eff, #5eb8ff);
+    color: #fff; border-color: transparent;
+}
+.style-emoji { font-size: 1.2rem; }
+.style-name { font-size: 0.8rem; font-weight: 500; }
+.style-desc { font-size: 0.65rem; opacity: 0.75; margin-top: 0.1rem; }
+
+.cat-header {
+    grid-column: 1 / -1; font-size: 0.7rem; font-weight: 600;
+    color: #ffd966; text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 0.6rem 0 0.3rem; border-bottom: 1px solid rgba(74,158,255,0.2); margin-bottom: 0.3rem;
+}
+.cat-header:first-child { padding-top: 0; border-bottom: none; }
+.cat-desc { grid-column: 1 / -1; font-size: 0.68rem; color: #8fa8c8; font-style: italic; margin-bottom: 0.4rem; }
+
+.no-style {
+    grid-column: 1 / -1; padding: 0.8rem; border-radius: 10px;
+    border: 2px dashed rgba(74,158,255,0.3); background: transparent;
+    text-align: center; cursor: pointer; font-size: 0.82rem; color: #8fa8c8;
+}
+.no-style.selected { border-color: #4a9eff; border-style: solid; background: rgba(74,158,255,0.12); color: #f0e8ff; font-weight: 600; }
+
+.control-row { margin-bottom: 0.9rem; }
+.control-label {
+    display: block; font-size: 0.72rem; color: #8fa8c8;
+    margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+}
+select {
+    width: 100%; padding: 0.7rem 0.9rem; border-radius: 10px;
+    border: 1px solid rgba(74,158,255,0.25); background: rgba(10,6,25,0.7);
+    color: #f0e8ff; font-family: inherit; font-size: 0.88rem;
+}
+select:focus { outline: none; border-color: #4a9eff; }
+
+.btn-primary {
+    width: 100%; padding: 1.1rem; border-radius: 14px; border: none;
+    background: linear-gradient(135deg, #4a9eff, #5eb8ff);
+    color: #fff; font-size: 1rem; font-weight: 600;
+    cursor: pointer; margin-bottom: 1rem;
+    box-shadow: 0 8px 32px rgba(74,158,255,0.45);
+}
+.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.btn-stop {
+    width: 100%; padding: 0.8rem; border-radius: 12px;
+    border: 1px solid #f87171; background: rgba(20,12,40,0.8);
+    color: #f87171; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; margin-bottom: 1rem; display: none;
+}
+.btn-stop.visible { display: block; }
+
+.queue { margin-top: 1rem; position: relative; z-index: 1; }
+.queue-item {
+    display: flex; align-items: center; gap: 0.8rem;
+    padding: 0.7rem 0.8rem; border-radius: 10px;
+    border: 1px solid rgba(74,158,255,0.2); margin-bottom: 0.4rem;
+    background: rgba(26,18,48,0.85); font-size: 0.82rem;
+}
+.queue-item.done { border-color: #4ade80; }
+.queue-item.failed { border-color: #f87171; }
+.queue-item.processing { border-color: #4a9eff; }
+.queue-item .q-status { margin-left: auto; font-size: 0.72rem; color: #8fa8c8; }
+
+.gallery { margin-top: 1.5rem; position: relative; z-index: 1; }
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.8rem; }
+.gallery-item { border-radius: 12px; overflow: hidden; border: 1px solid rgba(74,158,255,0.25); background: #000; }
+.gallery-item video { width: 100%; display: block; aspect-ratio: 9/16; object-fit: cover; }
+.gallery-item .g-caption { padding: 0.4rem 0.6rem; background: rgba(26,18,48,0.95); font-size: 0.7rem; color: #8fa8c8; }
+
+.status-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(90deg, #4a9eff, #5eb8ff);
+    color: #fff; padding: 0.7rem 1rem; font-size: 0.8rem;
+    display: flex; align-items: center; gap: 0.6rem;
+    transform: translateY(100%); transition: transform 0.3s; z-index: 100;
+}
+.status-bar.visible { transform: translateY(0); }
+.spinner {
+    width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin 0.8s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.toast {
+    position: fixed; top: 1.5rem; left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #f0e8ff; color: #1a1230;
+    padding: 0.85rem 1.4rem; border-radius: 12px;
+    font-size: 0.85rem; font-weight: 600;
+    z-index: 1000; opacity: 0;
+    transition: transform 0.35s, opacity 0.35s;
+    max-width: 90vw; text-align: center;
+}
+.toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast.success { background: #4ade80; }
+.toast.error { background: #f87171; color: #fff; }
+.toast.warn { background: #fbbf24; }
+
+.signature { text-align: center; margin: 3rem auto 1.5rem; padding: 0.5rem 0; position: relative; z-index: 1; user-select: none; }
+.signature span {
+    display: inline-block;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 1.35rem; font-weight: 900; letter-spacing: 0.06em; font-style: italic;
+    background: linear-gradient(135deg, #ffd966 0%, #ffeaa7 20%, #5eb8ff 50%, #4a9eff 75%, #ffd966 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    animation: signatureShine 5s ease-in-out infinite;
+    text-shadow:
+        1px 1px 0 rgba(255,217,102,0.6),
+        2px 2px 0 rgba(74,158,255,0.55),
+        3px 3px 0 rgba(120,80,200,0.5),
+        4px 4px 0 rgba(80,50,150,0.45),
+        5px 5px 0 rgba(50,30,100,0.4),
+        6px 6px 8px rgba(0,0,0,0.6);
+}
+@keyframes signatureShine { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+#noSleepCanvas, #noSleepVideo {
+    position: fixed; top: 0; left: 0; width: 1px; height: 1px;
+    opacity: 0.01; pointer-events: none; z-index: -1;
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.15rem;
+        line-height: 1.25;
+        letter-spacing: 0.01em;
+    }
+    #bg3d .grid { background-size: 60px 60px, 60px 60px; }
+    .signature span { font-size: 1.05rem; letter-spacing: 0.04em; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ANIMATIONS LATÉRALES — remplissent les côtés
+   ═══════════════════════════════════════════════════════════ */
+#sideEffects {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+/* Lignes lumineuses verticales animées */
+#sideEffects .beam {
+    position: absolute;
+    top: -20%;
+    width: 2px;
+    height: 140%;
+    background: linear-gradient(to bottom,
+        transparent 0%,
+        rgba(74,158,255,0.6) 20%,
+        rgba(94,184,255,0.9) 50%,
+        rgba(74,158,255,0.6) 80%,
+        transparent 100%);
+    filter: blur(1px);
+    animation: beamFlow 8s ease-in-out infinite;
+    opacity: 0.4;
+}
+#sideEffects .beam.b1 { left: 4%; animation-delay: 0s; }
+#sideEffects .beam.b2 { right: 4%; animation-delay: 1.5s; }
+#sideEffects .beam.b3 { left: 9%; animation-delay: 3s; height: 100%; opacity: 0.25; }
+#sideEffects .beam.b4 { right: 9%; animation-delay: 4.5s; height: 100%; opacity: 0.25; }
+
+@keyframes beamFlow {
+    0%, 100% { transform: translateY(0) scaleY(1); opacity: 0.3; }
+    50%      { transform: translateY(-10%) scaleY(1.1); opacity: 0.7; }
+}
+
+/* Petits points lumineux qui montent et descendent sur les côtés */
+#sideEffects .spark {
+    position: absolute;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: #5eb8ff;
+    box-shadow: 0 0 10px #4a9eff, 0 0 20px #4a9eff;
+    animation: sparkFloat 6s ease-in-out infinite;
+}
+#sideEffects .spark.s1 { left: 3%;  top: 20%; animation-delay: 0s; }
+#sideEffects .spark.s2 { left: 6%;  top: 60%; animation-delay: 1s; background: #a8d8ff; }
+#sideEffects .spark.s3 { right: 5%; top: 30%; animation-delay: 2s; }
+#sideEffects .spark.s4 { right: 8%; top: 75%; animation-delay: 3s; background: #a8d8ff; }
+#sideEffects .spark.s5 { left: 2%;  top: 85%; animation-delay: 4s; }
+#sideEffects .spark.s6 { right: 2%; top: 15%; animation-delay: 5s; background: #ffd966; }
+
+@keyframes sparkFloat {
+    0%, 100% { transform: translateY(0); opacity: 0.3; }
+    50%      { transform: translateY(-40px); opacity: 1; }
+}
+
+/* Hexagones / losanges décoratifs sur les côtés */
+#sideEffects .shape {
+    position: absolute;
+    width: 60px; height: 60px;
+    border: 1px solid rgba(74,158,255,0.3);
+    transform: rotate(45deg);
+    animation: shapeRotate 12s linear infinite;
+    opacity: 0.25;
+}
+#sideEffects .shape.sh1 { left: 1%;  top: 25%; }
+#sideEffects .shape.sh2 { right: 1%; top: 55%; animation-direction: reverse; }
+#sideEffects .shape.sh3 { left: 2%;  top: 70%; animation-duration: 18s; }
+
+@keyframes shapeRotate {
+    0%   { transform: rotate(45deg) scale(1); opacity: 0.15; }
+    50%  { transform: rotate(225deg) scale(1.15); opacity: 0.35; }
+    100% { transform: rotate(405deg) scale(1); opacity: 0.15; }
+}
+
+/* Masquer sur très petit écran mobile pour ne pas surcharger */
+@media (max-width: 600px) {
+    #sideEffects .beam.b3,
+    #sideEffects .beam.b4,
+    #sideEffects .shape { display: none; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   ANIMATION PSEUDO "Lpepo" — apparaît sur les côtés aléatoirement
+   ═══════════════════════════════════════════════════════════ */
+#lpepoPopup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: clamp(2rem, 7vw, 4.5rem);
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: 0.05em;
+    color: #4a9eff;
+    text-shadow:
+        2px 2px 0 #1a4a8a,
+        4px 4px 0 #0d2a55,
+        6px 6px 0 #06152b,
+        8px 8px 20px rgba(0,0,0,0.9),
+        0 0 30px rgba(74,158,255,0.8),
+        0 0 60px rgba(94,184,255,0.5);
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0;
+    white-space: nowrap;
+    user-select: none;
+    will-change: opacity, transform;
+    transform-origin: center center;
+}
+
+#lpepoPopup.show {
+    animation: lpepoFlash 2s ease-out forwards;
+}
+
+@keyframes lpepoFlash {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) rotate(var(--rot, -12deg)) scale(0.5);
+    }
+    15% {
+        opacity: 1;
+        transform: translate(-50%, -50%) rotate(var(--rot, -12deg)) scale(1.15);
+    }
+    25% {
+        opacity: 1;
+        transform: translate(-50%, -50%) rotate(var(--rot, -12deg)) scale(1);
+    }
+    75% {
+        opacity: 1;
+        transform: translate(-50%, -50%) rotate(var(--rot, -12deg)) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) rotate(var(--rot, -12deg)) scale(1.3);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PETITS ÉCLAIRS SUR LES CÔTÉS
+   ═══════════════════════════════════════════════════════════ */
+#sideEffects .spark-bolt {
+    position: absolute;
+    width: 40px;
+    height: 70px;
+    pointer-events: none;
+    opacity: 0;
+    filter: drop-shadow(0 0 6px rgba(74,158,255,0.9)) drop-shadow(0 0 14px rgba(94,184,255,0.5));
+    animation: boltFlash 5s ease-in-out infinite;
+}
+
+/* Position des 6 éclairs (3 à gauche, 3 à droite) */
+#sideEffects .spark-bolt.sb1 { left: 2%;  top: 10%; animation-delay: 0s; }
+#sideEffects .spark-bolt.sb2 { left: 6%;  top: 40%; animation-delay: 1.8s; }
+#sideEffects .spark-bolt.sb3 { left: 3%;  top: 72%; animation-delay: 3.6s; }
+#sideEffects .spark-bolt.sb4 { right: 2%; top: 18%; animation-delay: 0.9s; }
+#sideEffects .spark-bolt.sb5 { right: 6%; top: 48%; animation-delay: 2.7s; }
+#sideEffects .spark-bolt.sb6 { right: 3%; top: 82%; animation-delay: 4.4s; }
+
+/* Variantes de taille et orientation */
+#sideEffects .spark-bolt.sb2 { transform: scale(0.8) rotate(15deg); }
+#sideEffects .spark-bolt.sb3 { transform: scale(1.2) rotate(-10deg); }
+#sideEffects .spark-bolt.sb4 { transform: scale(0.9) rotate(-15deg); }
+#sideEffects .spark-bolt.sb5 { transform: scale(1.1) rotate(12deg); }
+#sideEffects .spark-bolt.sb6 { transform: scale(0.85) rotate(-8deg); }
+
+/* Le tracé du zigzag en SVG stylisé via ::before */
+#sideEffects .spark-bolt::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 70'><path d='M20 0 L12 28 L22 30 L8 70' stroke='%234a9eff' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/><path d='M20 0 L12 28 L22 30 L8 70' stroke='%23a8d8ff' stroke-width='0.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Animation d'apparition/disparition rapide */
+@keyframes boltFlash {
+    0%, 88%, 100% { opacity: 0; }
+    89%           { opacity: 0.9; }
+    90%           { opacity: 0.2; }
+    91%           { opacity: 1; }
+    93%           { opacity: 0.6; }
+    95%           { opacity: 0.9; }
+    97%           { opacity: 0; }
+}
+
+/* Deuxième couche pour un effet de double-flash */
+#sideEffects .spark-bolt::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 70'><path d='M20 0 L12 28 L22 30 L8 70' stroke='%23a8d8ff' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round' opacity='0.4'/></svg>");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    filter: blur(3px);
+    animation: boltGlow 5s ease-in-out infinite;
+}
+
+@keyframes boltGlow {
+    0%, 88%, 100% { opacity: 0; }
+    89%, 97%      { opacity: 1; }
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="bg3d">
+<div id="sideEffects">
+    <div class="beam b1"></div>
+    <div class="beam b2"></div>
+    <div class="beam b3"></div>
+    <div class="beam b4"></div>
+    <div class="spark s1"></div>
+    <div class="spark s2"></div>
+    <div class="spark s3"></div>
+    <div class="spark s4"></div>
+    <div class="spark s5"></div>
+    <div class="spark s6"></div>
+    <div class="shape sh1"></div>
+    <div class="shape sh2"></div>
+    <div class="shape sh3"></div>
+
+    <div class="spark-bolt sb1"></div>
+    <div class="spark-bolt sb2"></div>
+    <div class="spark-bolt sb3"></div>
+    <div class="spark-bolt sb4"></div>
+    <div class="spark-bolt sb5"></div>
+    <div class="spark-bolt sb6"></div>
+</div>
+    <div class="grid"></div>
+    <div class="halo h1"></div>
+    <div class="halo h2"></div>
+    <div class="halo h3"></div>
+</div>
+
+<canvas id="circuitCanvas"></canvas>
+<canvas id="smokeCanvas"></canvas>
+
+<header>
+    <h1>⚡ La magie d'Lpepo et de L'Intelligence Artificielle ⚡</h1>
+    <p class="subtitle">Donnez vie à vos images enchantées</p>
+</header>
+
+<div class="info-banner">
+    <strong>Comment ça marche :</strong> Ajoutez vos images, choisissez un thème visuel, l'IA transforme chaque photo en <strong>scène fantastique animée</strong> - fées, dragons, poussière d'étoiles, personnage magique.. Format <strong>portrait 9:16</strong> et format <strong>paysage 16:9</strong>.
+</div>
+
+<div class="panel" id="api-panel">
+    <input type="password" class="api-key-input" id="api-key-input"
+           placeholder="Collez votre clé API ici (sk-...)" autocomplete="off" spellcheck="false">
+    <button type="button" class="api-save-btn" id="api-save-btn">💾 Enregistrer la clé</button>
+    <div class="status-line" id="api-status-line">
+        <span class="status-dot"></span>
+        <span id="api-status-text">Aucune clé API enregistrée</span>
+    </div>
+    <div class="hint">
+        Clé gratuite sur <a href="https://platform.agnes-ai.com" target="_blank" rel="noopener">platform.agnes-ai.com</a> → Settings → API Keys
+    </div>
+</div>
+
+<div class="upload-zone" id="upload-zone">
+    <input type="file" id="file-input" accept="image/*" multiple>
+    <div class="upload-icon">＋</div>
+    <div class="upload-text">Cliquez ici pour ajouter vos images</div>
+    <div class="upload-hint">Autant que vous voulez — chacune deviendra une vidéo magique</div>
+</div>
+
+<div class="images-grid" id="images-grid"></div>
+
+<div class="section open" id="section-prompt">
+    <div class="section-header" data-toggle="section-prompt">
+        <span class="section-title">✍️ Votre vision magique</span>
+        <span class="chevron">▼</span>
+    </div>
+    <div class="section-body">
+        <div class="section-content">
+            <textarea class="prompt-main" id="main-prompt"
+                placeholder="Décrivez votre vision fantastique. Exemple : « Donne vie à cette scène. Des fées dansent autour du sujet dans une traînée de poussière d'étoile. Un dragon traverse le ciel violet. Lumière irréelle. Garde chaque sujet identique à la photo. »"></textarea>
+            <div class="prompt-presets" id="prompt-presets"></div>
+        </div>
+    </div>
+</div>
+
+<div class="section" id="section-style">
+    <div class="section-header" data-toggle="section-style">
+        <span class="section-title">🔮 Sortilège visuel</span>
+        <span class="chevron">▼</span>
+    </div>
+    <div class="section-body">
+        <div class="section-content">
+            <div class="styles-grid" id="styles-grid"></div>
+        </div>
+    </div>
+</div>
+
+<div class="section" id="section-tech">
+    <div class="section-header" data-toggle="section-tech">
+        <span class="section-title">📷 Réglages techniques</span>
+        <span class="chevron">▼</span>
+    </div>
+    <div class="section-body">
+        <div class="section-content">
+            <div class="control-row">
+                <label class="control-label">Format vidéo</label>
+                <select id="format-select">
+                    <option value="9:16" selected>Portrait 9:16 (vertical — TikTok, Reels)</option>
+                    <option value="16:9">Paysage 16:9 (horizontal — YouTube, TV)</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <label class="control-label">Durée</label>
+                <select id="duration-select">
+                    <option value="121">5 secondes</option>
+                    <option value="153" selected>6,4 secondes</option>
+                    <option value="241">10 secondes</option>
+                    <option value="361">15 secondes</option>
+                    <option value="721">30 secondes</option>
+                    <option value="1081">45 secondes</option>
+                    <option value="1441">60 secondes</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <label class="control-label">Cadrage</label>
+                <select id="framing-select">
+                    <option value="random">Aléatoire</option>
+                    <option value="close">Très serré</option>
+                    <option value="medium">Moyen</option>
+                    <option value="wide">Large</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <label class="control-label">Intensité du mouvement</label>
+                <select id="intensity-select">
+                    <option value="random">Aléatoire</option>
+                    <option value="subtle">Subtile</option>
+                    <option value="moderate">Modérée</option>
+                    <option value="strong">Forte</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button type="button" class="btn-primary" id="generate-btn" disabled>✨ Lancer les sortilèges</button>
+<button type="button" class="btn-stop" id="stop-btn">⏹ Arrêter</button>
+
+<div class="queue" id="queue" style="display:none;"></div>
+
+<div class="gallery" id="gallery" style="display:none;">
+    <div class="section-title" style="margin-bottom:0.8rem;">Vidéos enchantées</div>
+    <div class="gallery-grid" id="gallery-grid"></div>
+</div>
+
+<div class="signature">
+    <span>since @ LpepoLnK 2026</span>
+</div>
+
+<div class="status-bar" id="status-bar">
+    <div class="spinner"></div>
+    <span id="status-text">Préparation…</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<canvas id="noSleepCanvas" width="2" height="2"></canvas>
+<video id="noSleepVideo" playsinline muted loop></video>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// CIRCUITS ÉLECTRIQUES
+// ══════════════════════════════════════════════════════════
+(function initCircuits() {
+    const canvas = document.getElementById('circuitCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W = 0, H = 0;
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    function resize() {
+        W = window.innerWidth; H = window.innerHeight;
+        canvas.width = W * DPR; canvas.height = H * DPR;
+        canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const circuits = [];
+    const MAX_CIRCUITS = 8;
+
+    function createCircuit() {
+        const startX = Math.random() * W;
+        const startY = Math.random() * H;
+        const segments = [];
+        let cx = startX, cy = startY;
+        const numSegments = 3 + Math.floor(Math.random() * 4);
+        let dir = Math.floor(Math.random() * 4);
+        for (let i = 0; i < numSegments; i++) {
+            const len = 30 + Math.random() * 90;
+            let nx = cx, ny = cy;
+            if (dir === 0) ny = cy - len;
+            else if (dir === 1) nx = cx + len;
+            else if (dir === 2) ny = cy + len;
+            else nx = cx - len;
+            segments.push({ x1: cx, y1: cy, x2: nx, y2: ny });
+            cx = nx; cy = ny;
+            dir = (dir + (Math.random() < 0.5 ? 1 : 3)) % 4;
+        }
+        return {
+            segments, age: 0,
+            maxLife: 3 + Math.random() * 4,
+            hue: 260 + Math.random() * 80,
+            pulsePhase: Math.random() * Math.PI * 2
+        };
+    }
+
+    let lastSpawn = 0;
+    const SPAWN_INTERVAL = 1200;
+
+    function tick(now) {
+        ctx.clearRect(0, 0, W, H);
+        ctx.globalCompositeOperation = 'lighter';
+        if (now - lastSpawn > SPAWN_INTERVAL && circuits.length < MAX_CIRCUITS) {
+            circuits.push(createCircuit());
+            lastSpawn = now + (Math.random() * 800);
+        }
+        const dt = 1 / 60;
+        for (let i = circuits.length - 1; i >= 0; i--) {
+            const c = circuits[i];
+            c.age += dt;
+            const t = c.age / c.maxLife;
+            let alpha = 1;
+            if (t < 0.2) alpha = t / 0.2;
+            else if (t > 0.7) alpha = Math.max(0, (1 - t) / 0.3);
+            if (c.age >= c.maxLife) { circuits.splice(i, 1); continue; }
+            c.pulsePhase += dt * 3;
+            const pulse = 0.7 + Math.sin(c.pulsePhase) * 0.3;
+
+            ctx.lineWidth = 1.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = 'hsla(' + c.hue + ', 90%, 70%, ' + (alpha * 0.6 * pulse) + ')';
+            ctx.shadowColor = 'hsla(' + c.hue + ', 100%, 70%, ' + (alpha * 0.9) + ')';
+            ctx.shadowBlur = 12 * pulse;
+
+            ctx.beginPath();
+            for (const seg of c.segments) {
+                ctx.moveTo(seg.x1, seg.y1);
+                ctx.lineTo(seg.x2, seg.y2);
+            }
+            ctx.stroke();
+
+            ctx.shadowBlur = 8;
+            ctx.fillStyle = 'hsla(' + c.hue + ', 100%, 80%, ' + (alpha * 0.9) + ')';
+            for (const seg of c.segments) {
+                ctx.beginPath();
+                ctx.arc(seg.x2, seg.y2, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            const first = c.segments[0];
+            if (first) {
+                ctx.beginPath();
+                ctx.arc(first.x1, first.y1, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        ctx.shadowBlur = 0;
+        ctx.globalCompositeOperation = 'source-over';
+        requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+})();
+
+// ══════════════════════════════════════════════════════════
+// ÉCRAN DE FUMÉE DERRIÈRE LA SOURIS
+// ══════════════════════════════════════════════════════════
+(function initSmoke() {
+    const canvas = document.getElementById('smokeCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W = 0, H = 0;
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    function resize() {
+        W = window.innerWidth; H = window.innerHeight;
+        canvas.width = W * DPR; canvas.height = H * DPR;
+        canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const mouse = { x: W / 2, y: H / 2, tx: W / 2, ty: H / 2, active: false };
+    window.addEventListener('mousemove', e => { mouse.tx = e.clientX; mouse.ty = e.clientY; mouse.active = true; });
+    window.addEventListener('mouseleave', () => { mouse.active = false; });
+    window.addEventListener('touchmove', e => {
+        if (e.touches[0]) { mouse.tx = e.touches[0].clientX; mouse.ty = e.touches[0].clientY; mouse.active = true; }
+    }, { passive: true });
+    window.addEventListener('touchend', () => { mouse.active = false; });
+
+    const particles = [];
+    const MAX_PARTICLES = 50;
+    let hueShift = 0;
+
+    function spawn() {
+        if (!mouse.active) return;
+        if (particles.length >= MAX_PARTICLES) return;
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.random() * 8;
+        particles.push({
+            x: mouse.x + Math.cos(angle) * radius + (Math.random() - 0.5) * 6,
+            y: mouse.y + Math.sin(angle) * radius + (Math.random() - 0.5) * 6,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: (Math.random() - 0.5) * 0.4 - 0.1,
+            life: 1,
+            decay: 0.012 + Math.random() * 0.015,
+            size: 15 + Math.random() * 25,
+            hue: 260 + Math.random() * 60
+        });
+    }
+
+    function tick() {
+        mouse.x += (mouse.tx - mouse.x) * 0.12;
+        mouse.y += (mouse.ty - mouse.y) * 0.12;
+        ctx.clearRect(0, 0, W, H);
+        ctx.globalCompositeOperation = 'lighter';
+        if (mouse.active) { for (let i = 0; i < 2; i++) spawn(); }
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx; p.y += p.vy;
+            p.vx *= 0.98; p.vy *= 0.98; p.vy -= 0.0015;
+            p.life -= p.decay;
+            if (p.life <= 0) { particles.splice(i, 1); continue; }
+            const alpha = p.life * 0.12;
+            const r = p.size * (1.1 - p.life * 0.4);
+            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+            grad.addColorStop(0, 'hsla(' + (p.hue + hueShift) + ', 80%, 65%, ' + alpha + ')');
+            grad.addColorStop(0.5, 'hsla(' + (p.hue + hueShift) + ', 75%, 50%, ' + (alpha * 0.4) + ')');
+            grad.addColorStop(1, 'hsla(' + (p.hue + hueShift) + ', 70%, 40%, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        hueShift += 0.12;
+        if (hueShift > 360) hueShift -= 360;
+        ctx.globalCompositeOperation = 'source-over';
+        requestAnimationFrame(tick);
+    }
+    tick();
+})();
+
+// ══════════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════════
+const API_BASE = 'https://apihub.agnes-ai.com/v1';
+const POLL_BASE = 'https://apihub.agnes-ai.com/agnesapi';
+const MODEL_VIDEO = 'agnes-video-v2.0';
+const FRAME_RATE = 24;
+
+let createIntervalMs = 62000;
+const CREATE_INTERVAL_MIN = 62000;
+const CREATE_INTERVAL_MAX = 90000;
+const POLL_INTERVAL_SEC = 8;
+const MAX_POLL_ATTEMPTS = 100;
+const API_KEY_STORAGE = 'fantasy_api_key';
+const MAX_IMAGE_SIZE = 12 * 1024 * 1024;
+const THUMBNAIL_MAX_WIDTH = 200;
+
+const state = {
+    images: [],
+    isRunning: false,
+    stopRequested: false,
+    queue: [],
+    completed: 0,
+    failed: 0,
+    selectedEffect: null,
+    mainPrompt: '',
+    format: '9:16',
+    framing: 'random',
+    intensity: 'random',
+    durationFrames: 153,
+    isLoadingImages: false
+};
+
+const memStore = {};
+function storageGet(k) {
+    try { const v = localStorage.getItem(k); if (v !== null) return v; } catch(e){}
+    return memStore[k] !== undefined ? memStore[k] : null;
+}
+function storageSet(k, v) {
+    memStore[k] = v;
+    try { localStorage.setItem(k, v); } catch(e){}
+}
+function storageRemove(k) {
+    delete memStore[k];
+    try { localStorage.removeItem(k); } catch(e){}
+}
+
+let toastTimeout = null;
+function showToast(msg, type, duration) {
+    type = type || 'success';
+    duration = duration || 2500;
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.classList.remove('visible','success','error','warn');
+    void toast.offsetWidth;
+    const icons = { success: '✓', error: '✕', warn: '⚠' };
+    toast.textContent = (icons[type] || '') + ' ' + msg;
+    toast.classList.add(type);
+    requestAnimationFrame(() => toast.classList.add('visible'));
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => toast.classList.remove('visible'), duration);
+}
+
+function getApiKey() { return (storageGet(API_KEY_STORAGE) || '').trim(); }
+
+function saveApiKey() {
+    const input = document.getElementById('api-key-input');
+    if (!input) return;
+    const key = input.value.trim();
+    if (!key) {
+        storageRemove(API_KEY_STORAGE);
+        updateApiPanel();
+        showToast('Clé supprimée', 'warn');
+        return;
+    }
+    if (key.length < 10) {
+        showToast('Clé trop courte', 'error');
+        return;
+    }
+    storageSet(API_KEY_STORAGE, key);
+    updateApiPanel();
+    showToast('Clé API enregistrée ✓', 'success');
+    input.blur();
+}
+
+function updateApiPanel() {
+    const panel = document.getElementById('api-panel');
+    const input = document.getElementById('api-key-input');
+    const line  = document.getElementById('api-status-line');
+    const text  = document.getElementById('api-status-text');
+    if (!panel || !input || !line || !text) return;
+    const key = getApiKey();
+    if (key) {
+        panel.classList.add('ok');
+        line.classList.add('ok');
+        text.textContent = 'Clé API active · ' + key.slice(0,8) + '…' + key.slice(-4);
+        input.value = key;
+        input.placeholder = '';
+    } else {
+        panel.classList.remove('ok');
+        line.classList.remove('ok');
+        text.textContent = 'Aucune clé API enregistrée';
+        input.value = '';
+        input.placeholder = 'Collez votre clé API ici (sk-...)';
+    }
+    updateGenerateBtn();
+}
+
+function updateGenerateBtn() {
+    const btn = document.getElementById('generate-btn');
+    if (!btn) return;
+    const hasImages = state.images.length > 0;
+    const hasKey = !!getApiKey();
+    btn.disabled = !hasImages || !hasKey || state.isRunning || state.isLoadingImages;
+    if (state.isLoadingImages) btn.textContent = 'Chargement… (' + state.images.length + ')';
+    else if (state.isRunning) {
+        const done = state.completed + state.failed;
+        btn.textContent = 'Création en cours… (' + done + '/' + state.queue.length + ')';
+    }
+    else if (!hasKey) btn.textContent = 'Ajoutez votre clé API';
+    else if (!hasImages) btn.textContent = 'Ajoutez des images';
+    else btn.textContent = '✨ Créer ' + state.images.length + ' vidéo' + (state.images.length > 1 ? 's' : '');
+}
+
+const AMBIANCE = [
+    { id: 'fairies', name: 'Fées & Poussière', emoji: '🧚', desc: 'Fées, étoiles',
+      prompt: 'magical fairies dancing around the subject leaving trails of golden star dust, ethereal glowing particles, enchanted forest atmosphere. Preserve the exact subject identity.' },
+    { id: 'dragon', name: 'Dragon Lointain', emoji: '🐉', desc: 'Dragon, feu',
+      prompt: 'a distant dragon flying across a dramatic sky leaving a trail of embers, epic fantasy landscape, warm fire glow. Preserve the exact subject identity.' },
+    { id: 'potion', name: 'Potion Magique', emoji: '🧪', desc: 'Fumée, lueur',
+      prompt: 'magical swirling potion vapor glowing in purple and gold, alchemical smoke rising. Preserve the exact subject identity.' },
+    { id: 'enchanted', name: 'Forêt Enchantée', emoji: '🌳', desc: 'Bois, brume',
+      prompt: 'enchanted glowing forest at twilight, luminescent mushrooms, bioluminescent light particles. Preserve the exact subject identity.' },
+    { id: 'anime', name: 'Animé', emoji: '🌸', desc: 'Style japonais vibrant',
+      prompt: 'vibrant Japanese anime aesthetic, cel-shaded characters, expressive eyes, dynamic lighting, soft pastel color palette, subtle animation with gentle hair movement and glowing particles, atmosphere of an anime opening scene. Preserve the exact subject identity while giving the scene a beautiful animated look.' },
+    { id: 'cartoon', name: 'Cartoon', emoji: '🎨', desc: 'Style dessin animé joyeux',
+      prompt: 'playful cartoon animation style, bold outlines, bright saturated colors, exaggerated expressions, lively energetic movement, bouncy animation feel like a modern animated feature. Preserve the exact subject identity while giving the scene a fun cartoon look.' },
+    { id: 'celestial', name: 'Céleste', emoji: '✨', desc: 'Aurore, étoiles',
+      prompt: 'celestial magical atmosphere, aurora borealis colors, floating constellations, star-filled sky. Preserve the exact subject identity.' },
+    { id: 'crystal', name: 'Cristal', emoji: '💎', desc: 'Cristaux, lueur',
+      prompt: 'floating magical crystals emitting soft light, prismatic refractions, sparkling reflections. Preserve the exact subject identity.' },
+    { id: 'elven', name: 'Elfique', emoji: '🏹', desc: 'Nature, lumière',
+      prompt: 'elegant elven fantasy atmosphere, silver and green light, ancient noble forest. Preserve the exact subject identity.' },
+    { id: 'arcane', name: 'Arcane', emoji: '🔮', desc: 'Runes, magie',
+      prompt: 'arcane magic circle glowing under the subject, ancient runes floating, swirling blue and violet energy. Preserve the exact subject identity.' },
+    { id: 'fire', name: 'Feu Sacré', emoji: '🔥', desc: 'Flamme, or',
+      prompt: 'sacred fire magic, warm golden flames dancing, floating embers. Preserve the exact subject identity.' },
+    { id: 'water', name: 'Ondine', emoji: '💧', desc: 'Eau, turquoise',
+      prompt: 'magical water spirit atmosphere, luminescent water droplets, turquoise reflections. Preserve the exact subject identity.' },
+    { id: 'phoenix', name: 'Phénix', emoji: '🔥', desc: 'Renaissance, feu',
+      prompt: 'phoenix rising with fiery feathers, floating glowing embers, rebirth atmosphere. Preserve the exact subject identity.' }
+];
+
+const STYLIZE = [
+    { id: 'ghibli', name: 'Ghibli', emoji: '🌿', desc: 'Anime poétique',
+      prompt: 'Studio Ghibli anime style, Hayao Miyazaki aesthetic, hand-painted watercolor. Transform entire image.' },
+    { id: 'fairy', name: 'Conte de Fées', emoji: '👑', desc: 'Illustration',
+      prompt: 'classic fairy tale illustration, Arthur Rackham style, intricate ink linework. Transform entire image.' },
+    { id: 'tolkein', name: 'Tolkienien', emoji: '💍', desc: 'Fantasy épique',
+      prompt: 'epic high fantasy oil painting, Alan Lee style, dramatic lighting. Transform entire image.' },
+    { id: 'dark', name: 'Dark Fantasy', emoji: '💀', desc: 'Sombre',
+      prompt: 'dark fantasy aesthetic, gothic atmosphere, deep shadows, ominous mood. Transform entire image.' },
+    { id: 'stained', name: 'Vitrail', emoji: '🪟', desc: 'Médiéval',
+      prompt: 'medieval stained glass window art, lead outlines, jewel-toned colors. Transform entire image.' },
+    { id: 'painting', name: 'Peinture Huile', emoji: '🖼️', desc: 'Old Master',
+      prompt: 'classical oil painting, Old Master technique, visible brushstrokes, chiaroscuro lighting. Transform entire image.' },
+    { id: 'illustr', name: 'Illustration', emoji: '⚔️', desc: 'Livre de jeu',
+      prompt: 'fantasy role-playing game illustration, heroic proportions, vivid colors. Transform entire image.' },
+    { id: 'storybook', name: 'Livre Enfant', emoji: '📖', desc: 'Doux, coloré',
+      prompt: 'children storybook illustration, soft watercolor washes. Transform entire image.' }
+];
+
+const PRESETS = [
+    { label: '🧚 Fées', text: 'Des fées dansent autour du sujet dans une traînée de poussière d\'étoile dorée. Lumière irréelle et dorée.' },
+    { label: '🐉 Dragon', text: 'Un dragon traverse le ciel violet en laissant une traînée de braises.' },
+    { label: '🌳 Enchanté', text: 'Forêt enchantée illuminée par des champignons lumineux et des lucioles.' },
+    { label: '🌸 Animé', text: 'Donne à cette image un style animé japonais vibrant avec des couleurs pastel, des yeux expressifs et un léger mouvement de cheveux dans la brise.' },
+    { label: '🎨 Cartoon', text: 'Transforme cette scène en dessin animé joyeux avec des contours marqués, des couleurs vives et un mouvement énergique.' },
+    { label: '🔮 Magie Pure', text: 'Des runes magiques flottent autour du sujet dans une lueur bleue et violette.' }
+];
+
+
+const RANDOM_ACTIONS = [
+    'the subject slowly raises a hand toward the sky',
+    'hair and clothes move gently in a magical breeze',
+    'the subject closes their eyes and breathes slowly',
+    'the subject looks up toward the sky'
+];
+const RANDOM_CAMERA = [
+    'slow dolly-in, camera gliding forward',
+    'static locked-off frame',
+    'subtle parallax movement',
+    'slow push-in toward the face'
+];
+const RANDOM_LIGHT = [
+    'warm magical golden light',
+    'cool mystical blue glow',
+    'soft iridescent light',
+    'dramatic rim lighting'
+];
+
+const INTENSITY = {
+    subtle: 'very subtle movement, barely perceptible',
+    moderate: 'moderate movement, clear but controlled',
+    strong: 'strong dynamic movement'
+};
+const FRAMING = {
+    close: 'extreme close-up framing',
+    medium: 'medium shot, subject framed from waist up',
+    wide: 'wide shot with environment visible'
+};
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function log(m) { console.log('[Fantasy]', m); }
+function randomItem(a) { return a[Math.floor(Math.random() * a.length)]; }
+function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+}
+function setStatus(t) {
+    const bar = document.getElementById('status-bar');
+    const txt = document.getElementById('status-text');
+    if (!bar || !txt) return;
+    if (t) { bar.classList.add('visible'); txt.textContent = t; }
+    else bar.classList.remove('visible');
+}
+
+function fileToDataUri(file) {
+    return new Promise(function(resolve, reject) {
+        const r = new FileReader();
+        r.onload = function(e) { resolve(e.target.result); };
+        r.onerror = function() { reject(new Error('Erreur lecture')); };
+        r.readAsDataURL(file);
+    });
+}
+function generateThumbnail(dataUri) {
+    return new Promise(function(resolve) {
+        const img = new Image();
+        img.onload = function() {
+            try {
+                const canvas = document.createElement('canvas');
+                const ratio = img.height / img.width;
+                canvas.width = THUMBNAIL_MAX_WIDTH;
+                canvas.height = Math.round(THUMBNAIL_MAX_WIDTH * ratio);
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL('image/jpeg', 0.7));
+            } catch (e) { resolve(dataUri); }
+        };
+        img.onerror = function() { resolve(dataUri); };
+        img.src = dataUri;
+    });
+}
+async function processOneFile(file) {
+    if (!file.type.startsWith('image/')) return null;
+    if (file.size > MAX_IMAGE_SIZE) return null;
+    try {
+        const dataUri = await fileToDataUri(file);
+        const thumb = await generateThumbnail(dataUri);
+        return { dataUri: dataUri, thumbnail: thumb, id: Date.now() + Math.random() };
+    } catch (e) { return null; }
+}
+async function handleFiles(files) {
+    const imgFiles = Array.from(files).filter(function(f) { return f.type.startsWith('image/'); });
+    if (!imgFiles.length) { showToast('Aucune image valide', 'warn'); return; }
+    state.isLoadingImages = true;
+    updateGenerateBtn();
+    setStatus('Chargement de ' + imgFiles.length + ' image(s)…');
+    let processed = 0;
+    for (const f of imgFiles) {
+        const r = await processOneFile(f);
+        if (r) { state.images.push(r); processed++; renderImages(); }
+    }
+    state.isLoadingImages = false;
+    setStatus(null);
+    updateGenerateBtn();
+    showToast(processed + ' image(s) ajoutée(s)', 'success');
+}
+function removeImage(id) {
+    state.images = state.images.filter(function(i) { return i.id !== id; });
+    renderImages();
+    updateGenerateBtn();
+}
+function renderImages() {
+    const grid = document.getElementById('images-grid');
+    if (!grid) return;
+    grid.innerHTML = state.images.map(function(img) {
+        return '<div class="image-card">' +
+            '<img src="' + (img.thumbnail || img.dataUri) + '" alt="">' +
+            '<button class="remove-btn" data-remove="' + img.id + '">✕</button>' +
+            '</div>';
+    }).join('');
+    grid.querySelectorAll('[data-remove]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            removeImage(parseFloat(btn.dataset.remove));
+        });
+    });
+}
+
+function renderPromptPresets() {
+    const c = document.getElementById('prompt-presets');
+    if (!c) return;
+    c.innerHTML = PRESETS.map(function(p, i) {
+        return '<div class="prompt-preset" data-preset="' + i + '">' + esc(p.label) + '</div>';
+    }).join('');
+    c.querySelectorAll('[data-preset]').forEach(function(el) {
+        el.addEventListener('click', function() {
+            const p = PRESETS[parseInt(el.dataset.preset, 10)];
+            if (!p) return;
+            const ta = document.getElementById('main-prompt');
+            ta.value = p.text;
+            state.mainPrompt = p.text;
+            showToast('Exemple appliqué', 'success', 1200);
+        });
+    });
+}
+function renderStyles() {
+    const c = document.getElementById('styles-grid');
+    if (!c) return;
+    let html = '';
+    html += '<div class="no-style ' + (state.selectedEffect === null ? 'selected' : '') + '" data-effect="none">' +
+        (state.selectedEffect === null ? '✓ Aucun effet — votre prompt seul' : '🚫 Aucun effet visuel') + '</div>';
+    html += '<div class="cat-header">✨ Ambiances magiques</div>';
+    html += '<div class="cat-desc">Préserve votre image. Seule l\'ambiance change.</div>';
+    html += AMBIANCE.map(function(s) {
+        return '<div class="style-card ' + (state.selectedEffect === s.id ? 'selected' : '') + '" data-effect="' + s.id + '">' +
+            '<div class="style-emoji">' + s.emoji + '</div>' +
+            '<div><div class="style-name">' + esc(s.name) + '</div>' +
+            '<div class="style-desc">' + esc(s.desc) + '</div></div></div>';
+    }).join('');
+    html += '<div class="cat-header">🎭 Transformations stylistiques</div>';
+    html += '<div class="cat-desc">Transforment radicalement votre image.</div>';
+    html += STYLIZE.map(function(s) {
+        return '<div class="style-card ' + (state.selectedEffect === s.id ? 'selected' : '') + '" data-effect="' + s.id + '">' +
+            '<div class="style-emoji">' + s.emoji + '</div>' +
+            '<div><div class="style-name">' + esc(s.name) + '</div>' +
+            '<div class="style-desc">' + esc(s.desc) + '</div></div></div>';
+    }).join('');
+    c.innerHTML = html;
+    c.querySelectorAll('[data-effect]').forEach(function(el) {
+        el.addEventListener('click', function() {
+            const v = el.dataset.effect;
+            state.selectedEffect = (v === 'none') ? null : v;
+            renderStyles();
+        });
+    });
+}
+
+function buildPrompt() {
+    const all = AMBIANCE.concat(STYLIZE);
+    const eff = state.selectedEffect ? all.find(function(s) { return s.id === state.selectedEffect; }) : null;
+    const isStylize = eff && STYLIZE.some(function(s) { return s.id === state.selectedEffect; });
+    const hasUser = state.mainPrompt && state.mainPrompt.trim().length > 0;
+    const parts = [];
+    if (isStylize) {
+        parts.push('Animate this image as the starting frame. Transform the entire image into the following artistic style:');
+    } else {
+        parts.push('Animate this exact image as the starting frame. The subject must remain IDENTICAL: same face, same pose. Preserve composition and framing.');
+    }
+    if (eff) parts.push(eff.prompt);
+    if (hasUser) parts.push('Artistic direction: ' + state.mainPrompt.trim());
+    if (state.framing !== 'random' && FRAMING[state.framing]) parts.push(FRAMING[state.framing]);
+    if (state.intensity !== 'random' && INTENSITY[state.intensity]) parts.push(INTENSITY[state.intensity]);
+    else parts.push('moderate movement, clear but controlled');
+    parts.push(randomItem(RANDOM_ACTIONS));
+    parts.push(randomItem(RANDOM_CAMERA));
+    parts.push(randomItem(RANDOM_LIGHT));
+    if (state.format === '16:9') {
+        parts.push('Landscape 16:9 horizontal widescreen format, 60fps, no text, no watermarks');
+    } else {
+        parts.push('Portrait 9:16 vertical format, 60fps, no text, no watermarks');
+    }
+    return parts.join('. ');
+}
+
+async function apiFetch(url, options, label) {
+    for (let attempt = 0; attempt < 7; attempt++) {
+        if (state.stopRequested) throw new Error('Arrêt demandé');
+        try {
+            const res = await fetch(url, options);
+            if (res.status === 429) {
+                const w = [15, 30, 45, 60, 90, 120, 180][Math.min(attempt, 6)];
+                setStatus('L\'IA se prépare… (' + w + 's)');
+                await sleep(w * 1000);
+                continue;
+            }
+            if (res.status === 503) {
+                const w = [5, 10, 15, 20, 30, 45][Math.min(attempt, 5)];
+                setStatus('Vidéo en préparation… (' + w + 's)');
+                await sleep(w * 1000);
+                continue;
+            }
+            return res;
+        } catch (e) {
+            if (e.message === 'Arrêt demandé') throw e;
+            const w = [3, 5, 8, 12, 20, 30][Math.min(attempt, 5)];
+            setStatus('Connexion… (' + w + 's)');
+            await sleep(w * 1000);
+        }
+    }
+    return fetch(url, options);
+}
+
+async function createVideoTask(imageDataUri, prompt) {
+    // 🔒 Sécurité : garantit que num_frames respecte la règle 8*n+1 de l'API Agnes
+    const n = Math.round((state.durationFrames - 1) / 8);
+    const safeFrames = 8 * n + 1;
+    if (safeFrames !== state.durationFrames) {
+        console.warn('[Fantasy] num_frames corrigé :', state.durationFrames, '→', safeFrames);
+        state.durationFrames = safeFrames;
+    }
+
+    const res = await apiFetch(API_BASE + '/videos', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + getApiKey(),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: MODEL_VIDEO,
+            prompt: prompt,
+            image: imageDataUri,
+            num_frames: state.durationFrames,
+            frame_rate: FRAME_RATE
+        })
+    }, 'Création');
+
+    if (!res.ok) {
+        const err = await res.text();
+        throw new Error('HTTP ' + res.status + ' — ' + err.slice(0, 200));
+    }
+    const data = await res.json();
+    const videoId = data.video_id || data.id || data.task_id;
+    if (!videoId) throw new Error('Pas de video_id');
+    return videoId;
+}
+
+async function pollVideo(videoId, onProgress) {
+    const estSec = 30;
+    for (let r = estSec; r > 0; r--) {
+        if (state.stopRequested) throw new Error('Arrêt demandé');
+        onProgress('Vidéo en préparation… — ' + r + 's');
+        await sleep(1000);
+    }
+    for (let i = 0; i < MAX_POLL_ATTEMPTS; i++) {
+        if (state.stopRequested) throw new Error('Arrêt demandé');
+        if (i > 0) {
+            for (let r = POLL_INTERVAL_SEC; r > 0; r--) {
+                if (state.stopRequested) throw new Error('Arrêt demandé');
+                onProgress('L\'image prend vie… — ' + r + 's');
+                await sleep(1000);
+            }
+        }
+        const url = POLL_BASE + '?video_id=' + encodeURIComponent(videoId) + '&model_name=' + encodeURIComponent(MODEL_VIDEO);
+        const res = await apiFetch(url, {
+            method: 'GET',
+            headers: { 'Authorization': 'Bearer ' + getApiKey() }
+        }, 'Polling');
+        const d = await res.json();
+        const status = d.status || 'unknown';
+        const progress = d.progress || 0;
+        onProgress('Création… — ' + progress + '%');
+        if (status === 'completed' || status === 'succeeded' || status === 'done') {
+            const videoUrl = (d.metadata && d.metadata.url) || d.url || (d.output && d.output.url);
+            if (!videoUrl) throw new Error('Terminé mais pas d\'URL');
+            return videoUrl;
+        }
+        if (status === 'failed' || status === 'error' || status === 'cancelled') {
+            throw new Error('Échec (' + status + ')');
+        }
+    }
+    throw new Error('Délai dépassé');
+}
+
+function renderQueue() {
+    const q = document.getElementById('queue');
+    if (!q) return;
+    if (!state.queue.length) { q.style.display = 'none'; return; }
+    q.style.display = 'block';
+    const total = state.queue.length;
+    const done = state.completed + state.failed;
+    let html = '<div class="queue-item"><div><strong>Progression :</strong> ' + done + '/' + total + '</div></div>';
+    html += state.queue.map(function(item) {
+        let icon = '○', txt = 'En attente', cls = '';
+        if (item.status === 'creating') { icon = '◐'; txt = 'Préparation…'; cls = 'processing'; }
+        else if (item.status === 'processing') { icon = '◐'; txt = item.progress || 'En cours'; cls = 'processing'; }
+        else if (item.status === 'done') { icon = '●'; txt = 'Terminé'; cls = 'done'; }
+        else if (item.status === 'failed') { icon = '✕'; txt = 'Échec'; cls = 'failed'; }
+        return '<div class="queue-item ' + cls + '">' +
+            '<span>' + icon + '</span>' +
+            '<span>Image ' + (item.imageIndex + 1) + '</span>' +
+            '<span class="q-status">' + esc(txt) + '</span>' +
+            '</div>';
+    }).join('');
+    q.innerHTML = html;
+}
+
+function addToGallery(url, label) {
+    const g = document.getElementById('gallery');
+    const grid = document.getElementById('gallery-grid');
+    g.style.display = 'block';
+    const el = document.createElement('div');
+    el.className = 'gallery-item';
+    el.innerHTML = '<video controls preload="metadata" muted playsinline><source src="' + url + '" type="video/mp4"></video>' +
+        '<div class="g-caption">' + esc(label) + '</div>';
+    grid.appendChild(el);
+}
+
+async function createTaskOnly(item) {
+    item.status = 'creating';
+    item.progress = 'Préparation…';
+    renderQueue();
+    const prompt = buildPrompt();
+    const videoId = await createVideoTask(item.image.dataUri, prompt);
+    item.videoId = videoId;
+    item.startTime = Date.now();
+    item.status = 'processing';
+    item.progress = 'En cours…';
+    renderQueue();
+    return videoId;
+}
+
+async function pollTaskAndDisplay(item) {
+    try {
+        const url = await pollVideo(item.videoId, function(p) {
+            item.progress = p;
+            renderQueue();
+        });
+        item.status = 'done';
+        item.videoUrl = url;
+        item.progress = 'Terminé';
+        state.completed++;
+        renderQueue();
+        updateGenerateBtn();
+        addToGallery(url, 'Image ' + (item.imageIndex + 1));
+    } catch (e) {
+        if (e.message === 'Arrêt demandé') {
+            item.status = 'failed'; item.progress = 'Arrêté';
+        } else {
+            item.status = 'failed'; item.progress = 'Échec';
+            state.failed++;
+        }
+        renderQueue();
+        updateGenerateBtn();
+    }
+}
+
+async function startGeneration() {
+    if (state.isRunning || !state.images.length) return;
+    if (!getApiKey()) {
+        showToast('Ajoutez d\'abord votre clé API', 'error');
+        return;
+    }
+    state.mainPrompt = document.getElementById('main-prompt').value.trim();
+    if (!state.mainPrompt && !state.selectedEffect) {
+        if (!confirm('Ni prompt ni effet. Continuer avec un style aléatoire ?')) return;
+    }
+    state.isRunning = true;
+    state.stopRequested = false;
+    state.completed = 0;
+    state.failed = 0;
+    createIntervalMs = CREATE_INTERVAL_MIN;
+    state.queue = state.images.map(function(img, i) {
+        return {
+            imageIndex: i, image: img, status: 'pending', progress: null,
+            videoId: null, videoUrl: null, startTime: null
+        };
+    });
+    document.getElementById('gallery-grid').innerHTML = '';
+    document.getElementById('gallery').style.display = 'none';
+    document.getElementById('stop-btn').classList.add('visible');
+    document.getElementById('generate-btn').disabled = true;
+    renderQueue();
+    updateGenerateBtn();
+
+    const polling = [];
+    try {
+        for (let i = 0; i < state.queue.length; i++) {
+            if (state.stopRequested) break;
+            const item = state.queue[i];
+            try {
+                await createTaskOnly(item);
+                polling.push(pollTaskAndDisplay(item));
+            } catch (e) {
+                if (e.message === 'Arrêt demandé') break;
+                log('Échec création : ' + e.message);
+                item.status = 'failed'; item.progress = 'Échec';
+                state.failed++;
+                renderQueue();
+                updateGenerateBtn();
+            }
+            if (i < state.queue.length - 1 && !state.stopRequested) {
+                const w = Math.ceil(createIntervalMs / 1000);
+                for (let r = w; r > 0; r--) {
+                    if (state.stopRequested) break;
+                    setStatus('Respiration créative… — Image ' + (i+2) + '/' + state.queue.length + ' dans ' + r + 's');
+                    await sleep(1000);
+                }
+            }
+        }
+        if (polling.length) {
+            setStatus('Finalisation…');
+            await Promise.allSettled(polling);
+        }
+    } catch (e) {
+        log('Erreur globale : ' + e.message);
+    }
+
+    setStatus(state.completed + '/' + state.queue.length + ' vidéos créées');
+    await sleep(4000);
+    setStatus(null);
+    state.isRunning = false;
+    state.stopRequested = false;
+    document.getElementById('stop-btn').classList.remove('visible');
+    updateGenerateBtn();
+    showToast(state.completed + ' vidéo(s) créée(s)', 'success');
+}
+
+function stopGeneration() {
+    if (!state.isRunning) return;
+    state.stopRequested = true;
+    setStatus('Arrêt en cours…');
+}
+
+(function init() {
+    console.log('[Fantasy] Init…');
+
+    const saveBtn = document.getElementById('api-save-btn');
+    if (saveBtn) saveBtn.addEventListener('click', saveApiKey);
+
+    const apiInput = document.getElementById('api-key-input');
+    if (apiInput) apiInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); saveApiKey(); }
+    });
+
+    const stopBtn = document.getElementById('stop-btn');
+    if (stopBtn) stopBtn.addEventListener('click', stopGeneration);
+
+    document.querySelectorAll('[data-toggle]').forEach(function(h) {
+        h.addEventListener('click', function() {
+            document.getElementById(h.dataset.toggle).classList.toggle('open');
+        });
+    });
+
+    const zone = document.getElementById('upload-zone');
+    const input = document.getElementById('file-input');
+    if (zone && input) {
+        zone.addEventListener('click', function(e) {
+            if (e.target !== input) input.click();
+        });
+        input.addEventListener('change', function(e) {
+            handleFiles(e.target.files);
+            input.value = '';
+        });
+    }
+
+    const mainPrompt = document.getElementById('main-prompt');
+    if (mainPrompt) mainPrompt.addEventListener('input', function(e) {
+        state.mainPrompt = e.target.value;
+    });
+
+    const fmt = document.getElementById('format-select');
+    if (fmt) fmt.addEventListener('change', function(e) { state.format = e.target.value; });
+    const dur = document.getElementById('duration-select');
+    if (dur) dur.addEventListener('change', function(e) { state.durationFrames = parseInt(e.target.value, 10); });
+    const fr = document.getElementById('framing-select');
+    if (fr) fr.addEventListener('change', function(e) { state.framing = e.target.value; });
+    const it = document.getElementById('intensity-select');
+    if (it) it.addEventListener('change', function(e) { state.intensity = e.target.value; });
+
+    const genBtn = document.getElementById('generate-btn');
+    if (genBtn) genBtn.addEventListener('click', startGeneration);
+
+    updateApiPanel();
+    renderPromptPresets();
+    renderStyles();
+    renderImages();
+    renderQueue();
+
+// ══════════════════════════════════════════════════════════
+// Animation pseudo "Lpepo" — apparaît sur les côtés aléatoirement
+// ══════════════════════════════════════════════════════════
+(function initLpepoPopup() {
+    const popup = document.getElementById('lpepoPopup');
+    if (!popup) return;
+
+    // Zones d'apparition sur les côtés (en % de la fenêtre)
+    // Chaque zone = { x, y } où x et y sont des pourcentages
+    const positions = [
+        // Côté gauche
+        { x: 8,  y: 15 },
+        { x: 12, y: 30 },
+        { x: 7,  y: 50 },
+        { x: 10, y: 70 },
+        { x: 6,  y: 88 },
+        // Côté droit
+        { x: 92, y: 15 },
+        { x: 88, y: 32 },
+        { x: 93, y: 52 },
+        { x: 90, y: 72 },
+        { x: 94, y: 88 },
+        // Un peu plus vers l'intérieur (mais toujours sur les côtés)
+        { x: 18, y: 22 },
+        { x: 82, y: 25 },
+        { x: 20, y: 78 },
+        { x: 80, y: 82 }
+    ];
+
+    function triggerLpepo() {
+        // Choisir une position aléatoire
+        const pos = positions[Math.floor(Math.random() * positions.length)];
+
+        // Rotation aléatoire (de -25° à +25°)
+        const rotation = (Math.random() * 50 - 25).toFixed(1);
+
+        // Appliquer position + rotation via variables CSS
+        popup.style.left = pos.x + '%';
+        popup.style.top = pos.y + '%';
+        popup.style.setProperty('--rot', rotation + 'deg');
+
+        // Relancer l'animation
+        popup.classList.remove('show');
+        void popup.offsetWidth;
+        popup.classList.add('show');
+
+        // Prochain déclenchement dans 6 à 15 secondes
+        const nextDelay = 6000 + Math.random() * 9000;
+        setTimeout(triggerLpepo, nextDelay);
+    }
+
+    // Premier déclenchement après 2 à 5 secondes
+    setTimeout(triggerLpepo, 2000 + Math.random() * 3000);
+})();
+
+
+    console.log('[Fantasy] Prêt.');
+})();
+</script>
+<div id="lpepoPopup">Lpepo</div>
+</body>
+</html>
